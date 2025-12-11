@@ -1,11 +1,18 @@
-from views.view import View
-from controllers.controllers import Controller
+from views.user import UserView
+from controllers.menu import MenuController
+from controllers.tournament import TournamentController
+from controllers.player import PlayerController
 
 
 def main():
-    view = View()
-    app = Controller(view)
-    app.run_menu()
+    view = UserView()
+    player_controller = PlayerController(view)
+    tournament_controller = TournamentController(view,
+                                                 player_controller)
+    menu_controller = MenuController(view,
+                                     tournament_controller,
+                                     player_controller)
+    menu_controller.run_menu()
 
 
 if __name__ == ("__main__"):

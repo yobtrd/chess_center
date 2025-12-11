@@ -1,10 +1,10 @@
 class Player:
     """Data and business logic of the player"""
 
-    def __init__(self, last_name, first_name, birthdate, chess_id=None):
+    def __init__(self, last_name, first_name, birthdate, chess_id):
         """Initiate all the data needed for the player"""
-        self.last_name = last_name.strip()
-        self.first_name = first_name.strip()
+        self.last_name = last_name
+        self.first_name = first_name
         self.birthdate = birthdate
         self.chess_id = chess_id
 
