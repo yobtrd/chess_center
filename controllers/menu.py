@@ -1,15 +1,15 @@
 class MenuController:
-    """Initiate a view for the controller
-    and manage the different controllers"""
+    """controller for managing the main menu."""
 
     def __init__(self, view, tournament_controller, player_controller):
-        """Initiate a view for the controller"""
+        """Initialization of the main menu.
+        Initialize the view and the needed controllers."""
         self.view = view
         self.tournament_controller = tournament_controller
         self.player_controller = player_controller
 
     def run_menu(self):
-        """Run the menu, display and get the user's options"""
+        """Manages menu selection."""
         while True:
             menu_choice = self.view.get_menu_choice()
             if menu_choice == "1":

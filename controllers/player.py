@@ -4,17 +4,18 @@ from models.player import Player
 
 
 class PlayerController():
+    """Controller for managing the players datas and database."""
 
     def __init__(self, view):
-        """Initiate a view for the controller
-        and keep track of saved players"""
+        """Initialization of the player controller with view.
+        Store saved players and the save path."""
         self.view = view
         self.saved_players_list = []
         self.filepath = Path("data/players/players.json")
 
     def save_new_player(self):
-        """Save a new player to the program
-        Return a Player to be added to a tournament"""
+        """Save a new player to the program.
+        Return a Player when used for adding one to a tournament."""
         while True:
             player_datas = self.view.get_player_datas()
             Path("data/players").mkdir(parents=True, exist_ok=True)
@@ -26,7 +27,8 @@ class PlayerController():
             return self.dict_datas_to_player_model(player_datas)
 
     def load_saved_players_list(self):
-        """Load the saved players lists"""
+        """Load the saved players list.
+        Reset the list in case of corrupt file or no players saved."""
         try:
             with open(self.filepath, "r") as file:
                 self.saved_players_list = json.load(file)
@@ -34,8 +36,7 @@ class PlayerController():
             self.saved_players_list = []
 
     def dict_datas_to_player_model(self, player_datas):
-        """Transform a player's dictionnary datas to a
-        proper player model"""
+        """Transform a player's dictionnary datas to a player model."""
         return Player(player_datas["last_name"],
                       player_datas["first_name"],
                       player_datas["birthdate"],
@@ -43,8 +44,9 @@ class PlayerController():
                       )
 
     def add_player_by_id(self):
-        """Allows to add saved players to a tournament
-        via their chess ID."""
+        """Allows to add saved players to a tournament via their chess ID.
+        Return None if there are no saved players.
+        Return False if the ID in incorrect."""
         self.load_saved_players_list()
         if self.check_no_saved_players():
             return None
@@ -52,12 +54,11 @@ class PlayerController():
         for player_datas in self.saved_players_list:
             if player_datas["chess_id"] == input_id.strip().upper():
                 return self.dict_datas_to_player_model(player_datas)
-        self.view.display_no_id_match_error()
-        return None
+        return False
 
     def add_players_by_list(self):
-        """Display the list of saved players
-        and allows to add one to a tournament"""
+        """Allows to add saved players to a tournament via a list.
+        Return None if there are no saved players."""
         self.load_saved_players_list()
         if self.check_no_saved_players():
             return None
@@ -67,5 +68,5 @@ class PlayerController():
         return self.dict_datas_to_player_model(player_datas)
 
     def check_no_saved_players(self):
-        """Check if there are any saved players."""
+        """Return True if there are no saved players."""
         return len(self.saved_players_list) == 0

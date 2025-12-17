@@ -15,5 +15,5 @@ def main():
     menu_controller.run_menu()
 
 
-if __name__ == ("__main__"):
+if __name__ == "__main__":
     main()

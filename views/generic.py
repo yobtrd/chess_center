@@ -3,11 +3,10 @@ import re
 
 
 class GenericView:
-    """Manage all the generic methods for the user input errors"""
+    """Manages all the generic methods for the user input errors."""
 
     def get_confirmation_choice(self, prompt, yes="y", no="n"):
-        """Generic method for retrieving the selection of yes/no questions
-        and handling errors"""
+        """Manages yes/no questions and related inputs errors."""
         while True:
             choice = input(f"{prompt} ({yes}/{no}) ?\n").strip().lower()
             if choice == yes:
@@ -15,16 +14,15 @@ class GenericView:
             if choice == no:
                 return False
             print(f'Veuillez entrer "{yes}" pour confirmer ou '
-                  f'"{no}" pour annuler')
+                  f'"{no}" pour annuler\n')
 
     def display_options(self, options):
-        """Generic method for enumerating multiple choices menu"""
+        """Enumerates multiple choices menu."""
         for i, option, in enumerate(options, 1):
             print(f"{i} - {option}")
 
     def get_validated_choice(self, max_options):
-        """Generic method for retrieving multiple-choice selections
-        and handling errors"""
+        """Manages multiple-choice selections and related errors."""
         while True:
             choice = input("Choix: ")
             if choice.isdigit() and 1 <= int(choice) <= max_options:
@@ -33,9 +31,9 @@ class GenericView:
                   f"veuillez choisir entre 1 et {max_options}")
 
     def get_validated_input(self, prompt, required, validated):
-        """Generic method to verify the user's input validation.
-        required True is a requided field,
-        validated True valid a specific format needed"""
+        """checks the validation of data entered by the user in the field.
+        required True is a requided field.
+        validated True valid a specific format needed."""
         while True:
             value = input(f"- {prompt}: ").strip()
             if required and not value:
@@ -45,8 +43,15 @@ class GenericView:
                 continue
             return value
 
+    def check_press_enter_prompt(self, prompt):
+        """Blocking method waiting for Enter key press."""
+        while True:
+            if not input(f"\nAppuyer sur Entrée pour {prompt}...").strip():
+                return
+            print("Veuillez appuyer uniquement sur Entrée pour continuer.")
+
     def validate_date_format(self, date_str):
-        """Generic method for verifying the validity of birth dates"""
+        """Checks the validity of birth dates."""
         try:
             datetime.strptime(date_str, "%d/%m/%Y")
             return True
@@ -55,21 +60,28 @@ class GenericView:
             return False
 
     def validate_id_format(self, id_str):
-        """Generic method for verifying the validity of national chess id"""
+        """Checks the validity of national chess id."""
         if bool(re.match(r"[A-Z]{2}[0-9]{5}", id_str)):
             return True
         else:
             print('Un format "AB12345" est requis')
             return False
 
-    def display_menu_header(self, title, width=42, char="="):
-        """Display the menus headers with a center title"""
+    def display_principal_header(self, title, width=62, char="="):
+        """Displays a level 1 header with a center title."""
         separator = char * width
         title_line = f"=== {title} ==="
         padding = (width - len(title_line)) // 2
-        print(f"{separator}\n{' ' * padding}{title_line}\n{separator}")
+        print(f"\n{separator}\n{' ' * padding}{title_line}\n{separator}")
 
-    def display_selection_header(self, description, width=42, char="-"):
-        """Display a header when a selection is done"""
+    def display_level_two_header(self, message, width=62, char="-"):
+        """Displays a level 2 header."""
         separator = char * width
-        print(f"{separator}\n{description}\n{separator}")
+        message = " "*8 + message
+        print(f"\n{separator}\n{message}\n{separator}")
+
+    def display_level_three_header(self, message, width=62, char="-"):
+        """Displays a level 3 header with underline."""
+        separator = char * width
+        underline = char * len(message)
+        print(f"{separator}\n{message}\n{underline} ")
