@@ -9,13 +9,13 @@ class UserView:
         self.generic = GenericView()
 
     # Get methods
-    def get_menu_choice(self):
+    def get_main_menu_choice(self):
         """Displays the menu and obtain the user's choice."""
         self.generic.display_principal_header("Menu principal")
         options = ["Démarrer un nouveau tournoi",
                    "Enregistrer un nouveau joueur",
+                   "Reprendre un tournoi en cours",
                    "Afficher les rapports",
-                   "Continuer un tournoi en cours",
                    "Quitter"]
         self.generic.display_options(options)
         return self.generic.get_validated_choice(len(options))
@@ -23,9 +23,9 @@ class UserView:
     def get_player_datas(self):
         """Displays and obtain input regarding the fields for new player."""
         self.generic.display_level_three_header("Veuillez saisir "
-                                                "les informations du joueur:")
+                                                "les informations du joueur")
         fields_config = {
-            "last_name": ("Nom du joueur", True, None),
+            "last_name": ("Nom de famille du joueur", True, None),
             "first_name": ("Prénom du joueur", True, None),
             "birthdate": ("Date (DD/MM/YYYY)",
                           True, self.generic.validate_date_format),
@@ -43,15 +43,17 @@ class UserView:
         """Displays and obtain input regarding the fields
         for new tournament."""
         self.generic.display_level_three_header("Veuillez saisir les "
-                                                "informations du tournois:")
+                                                "informations du tournois")
         fields_config = {
-            "tournament_name": ("Nom du tournoi", True, None),
-            "tournament_place": ("Lieu du tournoi", True, None),
-            "tournament_start_date": ("Date du tournoi",
-                                      True, self.generic.validate_date_format),
-            "tournament_comment": ("Remarques du directeur "
-                                   "(appuyer sur Entrée pour passer)",
-                                   False, None)
+            "name": ("Nom du tournoi", True, None),
+            "place": ("Lieu du tournoi", True, None),
+            "start_date": ("Date du tournoi (DD/MM/YYYY)", True,
+                           self.generic.validate_date_format),
+            "total_rounds": ("Nombre de tours (appuyer sur Entrée pour "
+                             "laisser sur 4 tours par défaut)", False,
+                             self.generic.validate_round_format),
+            "comment": ("Remarques du directeur (appuyer sur Entrée pour "
+                        "passer)", False, None)
         }
         tournament_datas = {}
         for field, config in fields_config.items():
@@ -60,26 +62,29 @@ class UserView:
                 self.generic.get_validated_input(prompt, required, validated))
         return tournament_datas
 
-    def get_tournament_menu_choice(self):
+    def get_tournament_menu_choice(self, tournament):
         """Displays and obtain input regarding tournament menu."""
         self.generic.display_principal_header("Menu du tournoi")
-        options = ["Inscrire des joueurs au tournoi",
+        print(f"{tournament.name} de {tournament.place}")
+        self.generic.display_separator_level_two()
+        options = ["Accéder au menu d'inscription des joueurs",
                    "Démarrer le tournoi",
-                   "Annuler et retourner au menu principal"]
+                   "Retourner au menu principal"]
         self.generic.display_options(options)
         return self.generic.get_validated_choice(len(options))
 
     def get_tournament_player_menu_choice(self, counter):
         """Displays and obtain input regarding about the menu
         for adding players to the tournament."""
-        self.generic.display_principal_header("Inscription des joueurs "
-                                              "au tournoi")
-        self.display_counter(counter)
+        self.generic.display_principal_header("Menu d'inscription")
+        print(f"Joueur(s) actuellement inscrit(s): {counter}")
+        self.generic.display_separator_level_two()
         options = ["Inscrire des joueurs déjà enregistrés avec leur "
-                   "identifiant national d'échec (INE)",
+                   "identifiant national d'échec",
                    "Inscrire des joueurs déjà enregistrés via une liste",
                    "Enregistrer un nouveau joueur et "
                    "l'inscire au tournoi",
+                   "Voir les joueurs actuellement inscrits au tournoi",
                    "Retourner au menu du tournoi"]
         self.generic.display_options(options)
         return self.generic.get_validated_choice(len(options))
@@ -90,9 +95,13 @@ class UserView:
         choice = int(self.generic.get_validated_choice(len(options)))
         return saved_players_list[choice - 1]
 
+    def get_add_player_by_id_id(self):
+        """Get the saved players INE input."""
+        return input("Veuillez inscrire l'INE du joueur à enregister: ")
+
     def get_match_result(self, match_number, match):
         """Get the results of the current match."""
-        message = (f"Enregistrer les résultats pour le match {match_number}:")
+        message = (f"Enregistrer les résultats pour le match {match_number}")
         self.generic.display_level_three_header(message)
         options = [f"{match.player1.last_name.upper()} "
                    f"{match.player1.first_name} remporte le match",
@@ -106,46 +115,53 @@ class UserView:
     def display_saved_players_list(self, saved_players_list):
         "Displays a list of all the already saved players in the program."
         self.generic.display_level_three_header("Choisissez un joueur "
-                                                "dans la liste:")
+                                                "dans la liste")
         for i, player in enumerate(saved_players_list, 1):
             print(f"{i} - {player["last_name"].upper()} "
                   f"{player["first_name"]}")
 
     def display_tournament_summary(self, tournament):
-        """Summarize the tournament's data before start."""
+        """Summarize the tournament's data before start or resume."""
         message = (f"Le {tournament.name} de {tournament.place} "
-                   f"à commencé le {tournament.tournament_start_date}")
+                   f"a commencé le {tournament.start_date}")
         self.generic.display_principal_header(message)
+        print(f"Nombres de tours: {tournament.total_rounds}")
+        self.generic.display_separator_level_two()
         if tournament.description:
             print(tournament.description)
-            print("-"*62)
-        print("Joueurs inscrits:\n")
-        print(", ".join(f"{player.last_name.upper()} {player.first_name}"
-                        for player in tournament.players_list))
-        print("-"*62)
+            self.generic.display_separator_level_two()
+        print(f"Joueurs inscrits: {len(tournament.players_list)}")
+        self.display_tournament_players_list(tournament)
+        self.generic.display_separator_level_two()
 
-    def display_add_player_by_id_message(self):
-        return input("Veuillez inscrire l'INE du joueur à enregister: ")
-
-    def display_counter(self, counter):
-        """Displays the number of players currently registered
-        for the tournament."""
-        return print(f"Joueur(s) actuellement inscrit(s): "
-                     f"{counter}\n" + "-"*62)
+    def display_tournament_players_list(self, tournament):
+        """Displays a list of the actual players registered in tournament."""
+        players = tournament.players_list
+        player_lines = []
+        for i in range(0, len(players), 5):
+            chunk = players[i:i+5]
+            player_lines.append(", ".join(
+                f"{p.last_name.upper()} {p.first_name}" for p in chunk))
+        print("\n" + "\n".join(player_lines))
 
     def display_registered_player_succes(self):
-        return print("Joueur inscrit !")
+        print("Joueur inscrit !")
 
     def display_saved_player_success(self):
-        return print("Joueur sauvegardé.")
+        print("Joueur sauvegardé.")
+
+    def display_no_regisered_players(self):
+        print("Il n'y a aucun joueurs inscrits pour le moment.")
 
     def display_round_start(self, round):
-        self.generic.display_level_two_header(f"Le {round.name} démarre à "
-                                              f"{round.round_start_date}")
+        """Displays the start of the round with its name and datetime"""
+        message = (f"Le {round.name} a démarré le {round.start_date}")
+        self.generic.display_level_two_header(message)
 
     def display_round_end(self, round):
-        print("\n" + "-" * 62)
-        print(" "*8 + f"Le {round.name} fini à {round.round_end_date}")
+        """Displays the end of the round with its name and datetime"""
+        message = (f"Le {round.name} s'est terminé le {round.end_date}")
+        self.generic.display_level_two_header(message)
 
     def display_matches(self, matches):
         """Displays the paired players for the differents matches."""
@@ -158,7 +174,7 @@ class UserView:
 
     def display_results_summary(self, matches_list, round):
         """Displays the end of round summary with matches results."""
-        print("\n" + "=" * 62)
+        self.generic.display_separator_level_one()
         print(f"Résultat du {round.name}:\n")
         for i, match in enumerate(matches_list, 1):
             print(f"Match {i} : {match.match_result[0][0].last_name.upper()} "
@@ -174,20 +190,38 @@ class UserView:
         for rank, player in enumerate(sorted_players, 1):
             print(f"{rank}. {player.last_name.upper()} {player.first_name}: "
                   f"{player.score}")
-        print("=" * 62)
+        self.generic.display_separator_level_one()
 
     def display_tournament_end_summary(self, tournament, scoreboard):
         """Displays the end-of-tournament summary and
         the name of the winner(s)."""
         message = (f"Le {tournament.name} a fini le "
-                   f"{tournament.tournament_end_date} !\n "
-                   "Le gagnant de ce tournoi est "
-                   f"{scoreboard[0].first_name.upper()} "
-                   f"{scoreboard[0].last_name.upper()} !")
+                   f"{tournament.end_date}")
         self.generic.display_principal_header(message)
+        winner = ("Le gagnant de ce tournoi est "
+                  f"{scoreboard[0].first_name.upper()} "
+                  f"{scoreboard[0].last_name.upper()} !")
+        self.generic.display_winner_header(winner)
+
+    def display_saved_message(self):
+        print("\n- Tournoi sauvegardé -\n")
+
+    def display_loaded_message(self):
+        print("\n- Chargement du tournoi -")
+
+    def display_match_resume(self, match_number, round):
+        """Message displayed during loading for empty match results."""
+        print(f"\n- Le chargement reprend à l'enregistrement des résultats "
+              f"du match {match_number} du {round.name} -\n")
+
+    def display_resume_completed_round(self, round):
+        print(f"\n- Le chargement reprend à la fin du {round.name} -")
+
+    def display_resume_not_ended_round(self, round):
+        print(f"\n- Le chargement reprend au {round.name} -")
 
     # Display Confirmation methods
-    def get_tournament_choice(self):
+    def get_start_new_tournament_choice(self):
         """Confirmation of the "new tournament" selection."""
         return self.generic.get_confirmation_choice("Démarrer un nouveau "
                                                     "tournoi")
@@ -197,9 +231,15 @@ class UserView:
         return self.generic.get_confirmation_choice("Enregistrer un "
                                                     "nouveau joueur")
 
+    def get_resume_last_tournament_choice(self):
+        """Confirmation of the resume last tournament selection."""
+        return self.generic.get_confirmation_choice("Reprendre à la dernière "
+                                                    "sauvegarde du dernier "
+                                                    "tournoi")
+
     def get_quit_choice(self):
         """Confirmation of the "quit" selection."""
-        return self.generic.get_confirmation_choice("Etes-vous sûr "
+        return self.generic.get_confirmation_choice("Êtes-vous sûr "
                                                     "de vouloir quitter")
 
     def get_tournament_start_choice(self):
@@ -207,15 +247,15 @@ class UserView:
         return self.generic.get_confirmation_choice("Prêt à démarrer le "
                                                     "tournoi")
 
-    def get_back_to_menu_choice(self):
+    def get_back_to_main_menu_choice(self):
         """Confirmation for the return to the menu."""
-        return self.generic.get_confirmation_choice("Êtes-vous sûr de vouloir "
-                                                    "annuler et revenir au "
+        return self.generic.get_confirmation_choice("Retourner au "
                                                     "menu principal")
 
     def get_add_another_player_choice(self):
         """Confirmation regarding player additions to the tournament."""
-        return self.generic.get_confirmation_choice("Inscrire un autre joueur")
+        return self.generic.get_confirmation_choice("Inscrire un autre "
+                                                    "joueur")
 
     def get_save_another_player_choice(self):
         """Confirmation regarding player save."""
@@ -225,21 +265,21 @@ class UserView:
     def get_first_round_start_validation(self):
         """Validates the start of the first round."""
         return self.generic.check_press_enter_prompt("démarrer le "
-                                                     "premier tour")
+                                                     "premier round")
 
     def get_next_round_start_validation(self):
         """Validates the start of the next round."""
         return self.generic.check_press_enter_prompt("démarrer le "
-                                                     "prochain tour")
+                                                     "prochain round")
 
     def get_end_round_validation(self):
         """Validates the start of the end of the round."""
-        return self.generic.check_press_enter_prompt("finir le tour "
+        return self.generic.check_press_enter_prompt("finir le round "
                                                      "enregistrer les "
                                                      "résultats "
                                                      "des matchs")
 
-    def get_end_tournament_validation(self):
+    def get_back_to_main_menu_validation(self):
         """Validates the start of the end of the tournament."""
         return self.generic.check_press_enter_prompt("retourner au menu "
                                                      "principal")
@@ -249,9 +289,14 @@ class UserView:
         return self.generic.check_press_enter_prompt("retourner au menu "
                                                      "du tournoi")
 
+    def get_back_to_registration_menu_validation(self):
+        """Validates the return in the validation menu"""
+        return self.generic.check_press_enter_prompt("retourner au menu "
+                                                     "d'inscription")
+
     # Display specific errors methods
     def display_no_saved_players_error(self):
-        print("Aucun joueur enregistré, "
+        print("Attention, aucun joueur enregistré, "
               "veuillez d'abord enregistrer un joueur.")
 
     def display_already_added_player_error(self):
@@ -262,5 +307,12 @@ class UserView:
               "deux est nécessaire avant de pouvoir démarrer un tournoi.")
 
     def display_no_id_match_error(self):
-        print('Cet INE ne correspond à aucun joueur enregistré '
+        print('Attention, cet INE ne correspond à aucun joueur enregistré '
               '(Format "AB12345" requis).')
+
+    def display_no_saved_tournament_error(self):
+        print("\nAttention, il n'y a aucun tournoi de sauvegardé "
+              "pour le moment.")
+
+    def display_finished_tournament_error(self):
+        print("\nAttention, le dernier tournoi sauvegardé est terminé !")

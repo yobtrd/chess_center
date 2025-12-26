@@ -1,28 +1,34 @@
-import datetime
-from models.round import Round
+import random
 
 
 class Tournament:
     """Data and business logic of the tournament."""
 
-    def __init__(self, name, place, tournament_start_date, description=None,
-                 total_round=4):
+    def __init__(self, name, place, start_date, end_date=None, total_rounds=4,
+                 description=None, actual_round_index=0):
         """Initiate all the data needed for the tournament.
         players_list lists all registered players in the tournament.
         rounds_list list all the Round instance of the tournament."""
         self.name = name
         self.place = place
+        self.start_date = start_date
+        self.end_date = end_date
+        self.total_rounds = int(total_rounds)
         self.description = description
-        self.tournament_start_date = tournament_start_date
-        self.total_round = total_round
+        self.actual_round_index = actual_round_index
         self.players_list = []
         self.rounds_list = []
-        self.actual_round_index = 0
 
-    @property
-    def tournament_end_date(self):
-        """Returns the updated date and time at any point when called."""
-        return datetime.datetime.now().strftime("%d/%m/%Y à %H:%M")
+    def to_dict(self):
+        """Transform a Tournament model to a tournament's dictionnary datas."""
+        return {
+            "name": self.name,
+            "place": self.place,
+            "start_date": str(self.start_date),
+            "end_date": self.end_date,
+            "total_rounds": self.total_rounds,
+            "description": self.description,
+        }
 
     def add_tournament_player(self, player):
         """Add player to tournament if not already registered.
@@ -46,16 +52,12 @@ class Tournament:
             return False
         return True
 
-    def generate_round(self):
-        """Instance and return a round, add it to the tournament list."""
-        round = Round(f"Round {len(self.rounds_list) + 1}")
-        self.rounds_list.append(round)
-        self.actual_round_index = len(self.rounds_list)
-        return round
-
     def get_sorted_players(self):
-        """Return a list of sorted players according to their score."""
-        scoreboard = sorted(self.players_list,
+        """Return players sorted by score,
+        with random order for tied scores."""
+        shuffled_players = self.players_list.copy()
+        random.shuffle(shuffled_players)
+        scoreboard = sorted(shuffled_players,
                             key=lambda player: player.score,
                             reverse=True)
         return scoreboard

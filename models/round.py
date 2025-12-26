@@ -1,20 +1,33 @@
-import datetime
+from models.match import Match
 
 
 class Round:
     """Data and business logic of the round."""
 
-    def __init__(self, name):
+    def __init__(self, name, start_date=None, end_date=None):
         """Initiate all the data needed for the round."""
         self.name = name
+        self.start_date = start_date
+        self.end_date = end_date
         self.matches_list = []
 
-    @property
-    def round_start_date(self):
-        """Returns the updated date and time at any point when called."""
-        return datetime.datetime.now().strftime("%d/%m/%Y à %H:%M")
+    def to_dict(self):
+        """Transform a Round model to a round's dictionnary datas."""
+        return {
+            "name": self.name,
+            "start_date": self.start_date,
+            "end_date": self.end_date,
+            "matches": [m.to_dict() for m in self.matches_list]
+            }
 
-    @property
-    def round_end_date(self):
-        """Returns the updated date and time at any point when called."""
-        return datetime.datetime.now().strftime("%d/%m/%Y à %H:%M")
+    @classmethod
+    def from_dict(cls, round_data, players_dict):
+        """Rebuilds round from a dictionary.."""
+        round = Round(round_data["name"],
+                      round_data["start_date"],
+                      round_data["end_date"])
+        round.matches_list = [
+            Match.from_dict(m, players_dict)
+            for m in round_data.get("matches", [])
+            ]
+        return round

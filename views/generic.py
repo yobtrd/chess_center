@@ -5,6 +5,8 @@ import re
 class GenericView:
     """Manages all the generic methods for the user input errors."""
 
+    DEFAULT_WIDTH = 82
+
     def get_confirmation_choice(self, prompt, yes="y", no="n"):
         """Manages yes/no questions and related inputs errors."""
         while True:
@@ -27,7 +29,7 @@ class GenericView:
             choice = input("Choix: ")
             if choice.isdigit() and 1 <= int(choice) <= max_options:
                 return choice
-            print(f"Choix invalide; "
+            print(f"Choix invalide, "
                   f"veuillez choisir entre 1 et {max_options}")
 
     def get_validated_input(self, prompt, required, validated):
@@ -61,27 +63,57 @@ class GenericView:
 
     def validate_id_format(self, id_str):
         """Checks the validity of national chess id."""
-        if bool(re.match(r"[A-Z]{2}[0-9]{5}", id_str)):
+        if bool(re.match(r"[A-Z]{2}[0-9]{5}$", id_str)):
             return True
         else:
             print('Un format "AB12345" est requis')
             return False
 
-    def display_principal_header(self, title, width=62, char="="):
+    def validate_round_format(self, round_str):
+        """Checks the validity of total rounds numbers."""
+        if not round_str.strip():
+            return True
+        try:
+            if int(round_str) <= 0:
+                raise ValueError
+        except ValueError:
+            print("Appuyer uniquement sur Entrée pour laisser le nombre "
+                  "de tours par défaut (4) ou saisissez un nombre "
+                  "supérieur à 0")
+            return False
+        return True
+
+    def display_principal_header(self, title, width=DEFAULT_WIDTH, char="="):
         """Displays a level 1 header with a center title."""
         separator = char * width
-        title_line = f"=== {title} ==="
+        title_line = f"-== {title} ==-"
         padding = (width - len(title_line)) // 2
         print(f"\n{separator}\n{' ' * padding}{title_line}\n{separator}")
 
-    def display_level_two_header(self, message, width=62, char="-"):
+    def display_level_two_header(self, message, width=DEFAULT_WIDTH, char="-"):
         """Displays a level 2 header."""
         separator = char * width
-        message = " "*8 + message
-        print(f"\n{separator}\n{message}\n{separator}")
+        padding = (width - len(message)) // 2
+        print(f"\n{separator}\n{' ' * padding}{message}\n{separator}")
 
-    def display_level_three_header(self, message, width=62, char="-"):
+    def display_level_three_header(self, message,
+                                   width=DEFAULT_WIDTH, char="-"):
         """Displays a level 3 header with underline."""
         separator = char * width
         underline = char * len(message)
         print(f"{separator}\n{message}\n{underline} ")
+
+    def display_winner_header(self, winner, width=DEFAULT_WIDTH, char="*"):
+        """Displays header for winner message."""
+        separator = char * width
+        title_line = f"*** {winner} ***"
+        padding = (width - len(title_line)) // 2
+        print(f"\n{separator}\n{' ' * padding}{title_line}\n\n{separator}")
+
+    def display_separator_level_one(self, width=DEFAULT_WIDTH):
+        """Separator for the wiew."""
+        print("=" * width)
+
+    def display_separator_level_two(self, width=DEFAULT_WIDTH):
+        """Separator for the wiew."""
+        print("-" * width)

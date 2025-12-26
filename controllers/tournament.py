@@ -1,42 +1,136 @@
-import random
+import json
+from pathlib import Path
+from controllers.helper import HelperController
 from models.tournament import Tournament
-from models.match import Match
+from models.round import Round
+from models.player import Player
 
 
 class TournamentController():
     """controller for managing the tournament."""
 
-    def __init__(self, view, player_controller):
+    def __init__(self, view, player_controller, round_controller):
         """Initialization of the main menu.
         Initialize the view and the needed controllers."""
         self.view = view
         self.player_controller = player_controller
+        self.round_controller = round_controller
+        self.filepath = Path("data/tournaments/tournaments.json")
+        self.filepath.parent.mkdir(parents=True, exist_ok=True)
+        self.saved_tournaments_list = []
+        self.load_saved_tournaments_list()
 
-    def run_new_tournament(self):
-        """Start a tournament with the retrieved data.
-        Display the tournament menu."""
+    def load_saved_tournaments_list(self):
+        """Load the saved_tournament_list.
+        Reset the list in case of corrupt file or no players saved."""
+        try:
+            with open(self.filepath, "r") as file:
+                self.saved_tournaments_list = json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError):
+            self.saved_tournaments_list = []
+
+    def save_tournament(self, tournament):
+        """Saves the datas of a tournament state in a JSON file."""
+        self.load_saved_tournaments_list()
+        players_list = [p.to_dict() for p in tournament.players_list]
+        rounds_list = [r.to_dict() for r in tournament.rounds_list]
+        tournament_datas = {"tournament_datas": tournament.to_dict(),
+                            "tournament_players_list": players_list,
+                            "tournament_rounds_list": rounds_list
+                            }
+        existing_index = self.find_existing_tournament(tournament)
+        if existing_index is not None:
+            self.saved_tournaments_list[existing_index] = tournament_datas
+        else:
+            self.saved_tournaments_list.append(tournament_datas)
+        with open(self.filepath, "w") as file:
+            json.dump(self.saved_tournaments_list, file)
+        self.view.display_saved_message()
+
+    def find_existing_tournament(self, tournament):
+        """Search saved tournaments if the tournament already exists.
+        Return the index of the existing tournament.
+        Return None if no tournament is found."""
+        for i, t, in enumerate(self.saved_tournaments_list):
+            if t["tournament_datas"]["name"] == tournament.name:
+                return i
+        return None
+
+    def load_last_tournament(self):
+        """Loads the datas of the last tournament state with a JSON file.
+        Return the reserialized tournament.
+        Return None in case of exception."""
+        if not self.saved_tournaments_list:
+            return None
+        with open(self.filepath, "r") as file:
+            self.saved_tournaments_list = json.load(file)
+            datas = self.saved_tournaments_list[-1]
+            tournament = Tournament(**datas["tournament_datas"])
+            rounds_list = datas.get("tournament_rounds_list", [])
+            players_dict = self.load_full_players(datas)
+            tournament.players_list = list(players_dict.values())
+            tournament.rounds_list = [Round.from_dict(r, players_dict)
+                                      for r in rounds_list]
+            tournament.actual_round_index = len(tournament.rounds_list)
+            self.rebuild_scores(tournament)
+            self.view.display_loaded_message()
+            return tournament
+
+    def load_full_players(self, datas):
+        """Rebuilds a Player with just its chess ID."""
+        players_dict = {}
+        saved_chess_ids = [p["chess_id"]
+                           for p in datas.get("tournament_players_list", [])]
+        for player_data in self.player_controller.saved_players_list:
+            if player_data["chess_id"] in saved_chess_ids:
+                player = Player.from_dict(player_data)
+                players_dict[player.chess_id] = player
+        return players_dict
+
+    def rebuild_scores(self, tournament):
+        """Reconstructs player scores with match results."""
+        for round in tournament.rounds_list:
+            for match in round.matches_list:
+                if match.match_result:
+                    match.player1.score += float(match.match_result[0][1])
+                    match.player2.score += float(match.match_result[1][1])
+
+    def create_new_tournament(self):
+        """Retieves and creates a new tournament."""
         tournament_datas = self.view.get_tournament_datas()
-        tournament = Tournament(tournament_datas["tournament_name"],
-                                tournament_datas["tournament_place"],
-                                tournament_datas["tournament_start_date"],
-                                tournament_datas["tournament_comment"]
-                                )
+        parameters = {
+            'name': tournament_datas["name"],
+            'place': tournament_datas["place"],
+            'start_date': tournament_datas["start_date"],
+            'end_date': None,
+            'total_rounds': tournament_datas.get("total_rounds") or "4",
+            'description': tournament_datas["comment"]
+        }
+        tournament = Tournament(**parameters)
+        self.save_tournament(tournament)
+        return tournament
+
+    def tournament_menu(self, tournament):
+        """Manages tournament menu selection.
+        Return True to start the tournament.
+        Return False to return to main menu."""""
         while True:
-            choice = self.view.get_tournament_menu_choice()
+            choice = self.view.get_tournament_menu_choice(tournament)
             if choice == "1":
                 if self.tournament_player_add_menu(tournament):
                     continue
             elif choice == "2":
-                if self.tournament_start(tournament):
-                    break
+                if not tournament.check_players_numbers():
+                    if self.view.get_tournament_start_choice():
+                        while self.run_tournament_flow(tournament):
+                            continue
+                        return False
+                else:
+                    self.view.display_players_numbers_error()
+                    self.view.get_back_to_tournament_menu_validation()
             elif choice == "3":
-                if self.view.get_back_to_menu_choice():
+                if self.view.get_back_to_main_menu_choice():
                     return False
-                continue
-        self.view.display_tournament_summary(tournament)
-        while len(tournament.rounds_list) < tournament.total_round:
-            self.run_round(tournament)
-        self.end_tournament(tournament)
 
     def tournament_player_add_menu(self, tournament):
         """Manages the player addition menu.
@@ -51,6 +145,11 @@ class TournamentController():
             elif choice == "3":
                 self.add_tournament_new_players(tournament)
             elif choice == "4":
+                if len(tournament.players_list) == 0:
+                    self.view.display_no_regisered_players()
+                self.view.display_tournament_players_list(tournament)
+                self.view.get_back_to_registration_menu_validation()
+            elif choice == "5":
                 return True
 
     def add_tournament_players_by_id(self, tournament):
@@ -60,12 +159,14 @@ class TournamentController():
             checked_player = self.player_controller.add_player_by_id()
             if checked_player is None:
                 self.view.display_no_saved_players_error()
+                self.view.get_back_to_registration_menu_validation()
             elif checked_player is False:
                 self.view.display_no_id_match_error()
             elif checked_player:
                 add_success = tournament.add_tournament_player(checked_player)
                 if add_success:
                     self.view.display_registered_player_succes()
+                    self.save_tournament(tournament)
                 else:
                     self.view.display_already_added_player_error()
             should_continue = self.view.get_add_another_player_choice()
@@ -76,10 +177,12 @@ class TournamentController():
             checked_player = self.player_controller.add_players_by_list()
             if checked_player is None:
                 self.view.display_no_saved_players_error()
+                self.view.get_back_to_registration_menu_validation()
                 break
             add_success = tournament.add_tournament_player(checked_player)
             if add_success:
                 self.view.display_registered_player_succes()
+                self.save_tournament(tournament)
             else:
                 self.view.display_already_added_player_error()
             if not self.view.get_add_another_player_choice():
@@ -91,112 +194,42 @@ class TournamentController():
             player = self.player_controller.save_new_player()
             tournament.add_tournament_player(player)
             self.view.display_registered_player_succes()
+            self.save_tournament(tournament)
             if not self.view.get_add_another_player_choice():
                 break
 
-    def tournament_start(self, tournament):
-        """Manages choices and errors related to the start of the tournament.
-        Return False to return to the tournament menu.
-        Return True to start the tournament."""
-        if tournament.check_players_numbers():
-            self.view.display_players_numbers_error()
-            self.view.get_back_to_tournament_menu_validation()
-            return False
-        if self.view.get_tournament_start_choice():
-            return True
-        return False
-
-    def run_round(self, tournament):
-        """Manages the start and end of rounds."""
-        if tournament.actual_round_index == 0:
-            self.view.get_first_round_start_validation()
-            round = tournament.generate_round()
-            self.view.display_round_start(round)
-            self.generate_first_round_pairs(tournament, round)
-        else:
-            self.view.get_next_round_start_validation()
-            round = tournament.generate_round()
-            self.view.display_round_start(round)
-            self.generate_intelligent_pairs(tournament, round)
-        matches_list = round.matches_list
-        self.view.display_matches(matches_list)
-        self.view.get_end_round_validation()
-        self.view.display_round_end(round)
-        self.manages_scores(matches_list)
-        self.view.display_results_summary(matches_list, round)
-        self.view.display_scores(tournament.get_sorted_players())
-
-    def generate_first_round_pairs(self, tournament, round):
-        """Generate pairing with random method for the first round."""
-        players_list = tournament.players_list
-        random.shuffle(players_list)
-        for i in range(0, len(players_list), 2):
-            round.matches_list.append(Match(players_list[i],
-                                            players_list[i+1]))
-
-    def generate_intelligent_pairs(self, tournament, round):
-        """Generate pairing with "smart" method"for the next rounds.
-        When all unique matchups have been completed, force rematches."""
-        sorted_players_list = tournament.get_sorted_players()
-        used_players = set()
-        previous_matches = self.played_match(tournament)
-        for i in range(len(sorted_players_list)):
-            player1 = sorted_players_list[i]
-            if player1 in used_players:
-                continue
-            for j in range(i+1, len(sorted_players_list)):
-                player2 = sorted_players_list[j]
-                if player2 in used_players:
-                    continue
-                players_ids = sorted((player1.chess_id, player2.chess_id))
-                if tuple(players_ids) not in previous_matches:
-                    round.matches_list.append(Match(player1, player2))
-                    used_players.update({player1, player2})
-                    break
-        self.check_and_add_remaining_players(tournament, round, used_players)
-
-    def check_and_add_remaining_players(self, tournament, round, used_players):
-        """Generate pairing with scores to force rematches"""
-        remaining_players = []
-        for player in tournament.get_sorted_players():
-            if player not in used_players:
-                remaining_players.append(player)
-        if len(remaining_players) >= 2:
-            for i in range(0, len(remaining_players), 2):
-                round.matches_list.append(Match(remaining_players[i],
-                                                remaining_players[i+1]))
-
-    def played_match(self, tournament):
-        """List all matches already played.
-        Returns a sorted tuple to take into account the possibilities."""
-        previous_matches = set()
-        for round in tournament.rounds_list:
-            for match in round.matches_list:
-                previous_matches.add(tuple(sorted((match.player1.chess_id,
-                                                   match.player2.chess_id))))
-        return previous_matches
-
-    def manages_scores(self, matches_list):
-        """Manages points earned based on match results.
-        Updates player scores."""
-        for match_number, match in enumerate(matches_list, 1):
-            result = self.view.get_match_result(match_number, match)
-            if result == "1":
-                pointp1 = 1
-                pointp2 = 0
-            if result == "2":
-                pointp1 = 0
-                pointp2 = 1
-            if result == "3":
-                pointp1 = 0.5
-                pointp2 = 0.5
-            match.add_match_result(pointp1, pointp2)
-            match.player1.add_score(pointp1)
-            match.player2.add_score(pointp2)
+    def run_tournament_flow(self, tournament):
+        """Manages tournament flow."""
+        self.view.display_tournament_summary(tournament)
+        self.manages_tournament_loading(tournament)
+        while not self.tournament_is_completed(tournament):
+            self.round_controller.run_round_flow(tournament,
+                                                 self.save_tournament)
+        self.end_tournament(tournament)
 
     def end_tournament(self, tournament):
         """Manages the end of tournaments."""
         scoreboard = tournament.get_sorted_players()
+        tournament.end_date = HelperController.get_actual_datetime()
         self.view.display_tournament_end_summary(tournament, scoreboard)
         self.view.display_scores(scoreboard)
-        self.view.get_end_tournament_validation()
+        self.view.get_back_to_main_menu_validation()
+
+    def tournament_is_completed(self, tournament):
+        """Checks if the tournament is completely finished."""
+        rounds_completed = (
+            len(tournament.rounds_list) == tournament.total_rounds)
+        all_matches_processed = all(
+            m.match_result
+            for r in tournament.rounds_list
+            for m in r.matches_list
+        )
+        return rounds_completed and all_matches_processed
+
+    def manages_tournament_loading(self, tournament):
+        """Handles cases of a new round during loading."""
+        matches_status = self.round_controller.get_matches_status(tournament)
+        if len(tournament.rounds_list) > 0:
+            last_round = tournament.rounds_list[-1]
+            if last_round.end_date and not any(matches_status):
+                self.view.display_resume_completed_round(last_round)
