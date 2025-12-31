@@ -3,6 +3,7 @@ from controllers.menu import MenuController
 from controllers.tournament import TournamentController
 from controllers.player import PlayerController
 from controllers.round import RoundController
+from controllers.report import ReportController
 
 
 def main():
@@ -12,9 +13,13 @@ def main():
     tournament_controller = TournamentController(view,
                                                  player_controller,
                                                  round_controller)
+    report_controller = ReportController(view,
+                                         player_controller,
+                                         tournament_controller)
     menu_controller = MenuController(view,
                                      tournament_controller,
-                                     player_controller)
+                                     player_controller,
+                                     report_controller)
     menu_controller.main_menu()
 
 

@@ -1,15 +1,17 @@
 class MenuController:
     """controller for managing the main menu."""
 
-    def __init__(self, view, tournament_controller, player_controller):
+    def __init__(self, view, tournament_controller, player_controller,
+                 report_controller):
         """Initialization of the main menu.
         Initialize the view and the needed controllers."""
         self.view = view
         self.tournament_controller = tournament_controller
         self.player_controller = player_controller
+        self.report_controller = report_controller
 
     def main_menu(self):
-        """Manages menu selection."""
+        """Manages main menu selection."""
         while True:
             menu_choice = self.view.get_main_menu_choice()
             if menu_choice == "1":
@@ -18,16 +20,15 @@ class MenuController:
             elif menu_choice == "2":
                 if self.view.get_save_players_choice():
                     self.save_new_players()
-                continue
             elif menu_choice == "3":
                 if self.view.get_resume_last_tournament_choice():
                     self.resume_last_tournament()
             elif menu_choice == "4":
-                continue
+                if self.view.get_generate_report_choice():
+                    self.report_controller.reports_main_menu()
             elif menu_choice == "5":
                 if self.view.get_quit_choice():
                     quit()
-                continue
 
     def start_new_tournament(self):
         """Manages new tournament start selection."""

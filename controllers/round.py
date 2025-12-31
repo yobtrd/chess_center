@@ -1,5 +1,5 @@
 import random
-from controllers.helper import HelperController
+from controllers.helper import get_actual_datetime
 from models.match import Match
 from models.round import Round
 
@@ -27,7 +27,7 @@ class RoundController:
                 round = self.generate_next_round(tournament)
             elif state == "round_not_ended":
                 round = tournament.rounds_list[-1]
-                self.view.display_resume_not_ended_round(round)
+                self.view.display_resume_not_ending_round(round)
                 self.view.display_round_start(round)
             self.display_matches(tournament, round, save)
             self.manages_round_end(tournament, round, save)
@@ -83,7 +83,7 @@ class RoundController:
         new_round = Round(f"Round {len(tournament.rounds_list) + 1}")
         tournament.rounds_list.append(new_round)
         tournament.actual_round_index = len(tournament.rounds_list)
-        new_round.start_date = HelperController.get_actual_datetime()
+        new_round.start_date = get_actual_datetime()
         self.view.display_round_start(new_round)
         return new_round
 
@@ -131,7 +131,7 @@ class RoundController:
 
     def manages_round_end(self, tournament, round, save):
         """Manages the end of rounds."""
-        round.end_date = HelperController.get_actual_datetime()
+        round.end_date = get_actual_datetime()
         self.view.display_round_end(round)
         save(tournament)
 

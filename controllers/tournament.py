@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from controllers.helper import HelperController
+from controllers.helper import get_actual_datetime
 from models.tournament import Tournament
 from models.round import Round
 from models.player import Player
@@ -210,10 +210,23 @@ class TournamentController():
     def end_tournament(self, tournament):
         """Manages the end of tournaments."""
         scoreboard = tournament.get_sorted_players()
-        tournament.end_date = HelperController.get_actual_datetime()
-        self.view.display_tournament_end_summary(tournament, scoreboard)
+        tournament.end_date = get_actual_datetime()
+        self.view.display_tournament_end_summary(tournament)
+        self.manage_tournament_winner(scoreboard)
         self.view.display_scores(scoreboard)
+        self.save_tournament(tournament)
         self.view.get_back_to_main_menu_validation()
+
+    def manage_tournament_winner(self, scoreboard):
+        """Get and manage the tournament winner, handle cas of tied winners."""
+        max_score = scoreboard[0].score
+        max_score_list = [p for p in scoreboard if p.score == max_score]
+        if len(max_score_list) == 1:
+            winner = max_score_list[0]
+            self.view.display_tournament_winner(winner)
+        else:
+            winners_tied = max_score_list
+            self.view.display_tournament_winners_tied(winners_tied)
 
     def tournament_is_completed(self, tournament):
         """Checks if the tournament is completely finished."""

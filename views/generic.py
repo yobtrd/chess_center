@@ -29,8 +29,19 @@ class GenericView:
             choice = input("Choix: ")
             if choice.isdigit() and 1 <= int(choice) <= max_options:
                 return choice
-            print(f"Choix invalide, "
+            print("Choix invalide, "
                   f"veuillez choisir entre 1 et {max_options}")
+
+    def get_return_or_validated_choice(self, max_options):
+        while True:
+            choice = input("Choix: ").upper()
+            if choice.isdigit() and 1 <= int(choice) <= max_options:
+                return choice
+            if choice == "R":
+                return False
+            print("Choix invalide, "
+                  f'veuillez choisir entre 1 et {max_options} '
+                  'ou "R" pour revenir en arrière')
 
     def get_validated_input(self, prompt, required, validated):
         """checks the validation of data entered by the user in the field.
@@ -103,12 +114,15 @@ class GenericView:
         underline = char * len(message)
         print(f"{separator}\n{message}\n{underline} ")
 
-    def display_winner_header(self, winner, width=DEFAULT_WIDTH, char="*"):
+    def display_winner_header(self, message, winner,
+                              width=DEFAULT_WIDTH, char="*"):
         """Displays header for winner message."""
-        separator = char * width
-        title_line = f"*** {winner} ***"
-        padding = (width - len(title_line)) // 2
-        print(f"\n{separator}\n{' ' * padding}{title_line}\n\n{separator}")
+        separator = f"{char * width}\n{char * width}"
+        winner_line = f"*** {winner} ***"
+        padding_one = (width - len(winner_line)) // 2
+        padding_two = (width - len(message)) // 2
+        print(f"\n{separator}\n{' ' * padding_two}{message}\n\n"
+              f"{' ' * padding_one}{winner_line}\n\n{separator}")
 
     def display_separator_level_one(self, width=DEFAULT_WIDTH):
         """Separator for the wiew."""
