@@ -1,4 +1,5 @@
 import random
+
 from controllers.helper import get_actual_datetime
 from models.match import Match
 from models.round import Round
@@ -14,12 +15,14 @@ class RoundController:
     def run_round_flow(self, tournament, save):
         """Manages round flow and loading cases."""
         state = self.get_round_state(tournament)
+
         if state == "not_all_result_given":
             round = tournament.rounds_list[-1]
             self.process_pending_matches(tournament, round, save)
         elif state == "round_ended":
             round = tournament.rounds_list[-1]
             self.process_resume_ended_round(tournament, round, save)
+
         else:
             if state == "no_rounds_started":
                 round = self.generate_first_round(tournament)
@@ -49,12 +52,12 @@ class RoundController:
         elif any(matches_status):
             return "not_all_result_given"
         else:
-            return 'round_completed'
+            return "round_completed"
 
     def get_matches_status(self, tournament):
-        """Indicate True if the matches are finished with results,
-        False if not.
-        Returns a list of Booleans for each match.
+        """Indicate False if the matches are finished with results,
+        True if not.
+        Returns a list of booleans for each match.
         """
         matches_status = []
         if tournament.rounds_list:
@@ -89,10 +92,8 @@ class RoundController:
 
     def process_pending_matches(self, tournament, round, save):
         """Manages empty match results during loading."""
-        pending_matches = [match for match in round.matches_list
-                           if not match.match_result]
-        match_number = (
-            self.get_actual_match_number(tournament, pending_matches[0]))
+        pending_matches = [match for match in round.matches_list if not match.match_result]
+        match_number = self.get_actual_match_number(tournament, pending_matches[0])
         self.view.display_match_resume(match_number, round)
         self.manages_scores(pending_matches, tournament, save)
 
@@ -109,11 +110,9 @@ class RoundController:
         self.view.get_end_round_validation()
 
     def manages_scores(self, matches_list, tournament, save):
-        """Manages points earned based on match results.
-        Updates player scores."""
+        """Manages points earned based on match resultsand updates player scores."""
         for match in matches_list:
-            actual_match_number = self.get_actual_match_number(tournament,
-                                                               match)
+            actual_match_number = self.get_actual_match_number(tournament, match)
             result = self.view.get_match_result(actual_match_number, match)
             if result == "1":
                 points_p1 = 1
@@ -140,25 +139,31 @@ class RoundController:
         self.view.display_results_summary(round.matches_list, round)
         self.view.display_scores(tournament.get_sorted_players())
 
+    def get_actual_match_number(self, tournament, match):
+        """Return the index of the current match."""
+        return tournament.rounds_list[-1].matches_list.index(match) + 1
+
+    # === Pairs generation methods ===
     def generate_first_round_pairs(self, tournament, round):
         """Generate pairing with random method for the first round."""
         players_list = tournament.players_list
         random.shuffle(players_list)
         for i in range(0, len(players_list), 2):
-            round.matches_list.append(Match(players_list[i],
-                                            players_list[i+1]))
+            round.matches_list.append(Match(players_list[i], players_list[i + 1]))
 
     def generate_intelligent_pairs(self, tournament, round):
         """Generate pairing with "smart" method"for the next rounds.
-        When all unique matchups have been completed, force rematches."""
+        When all unique matchups have been completed, force rematches.
+        """
         sorted_players_list = tournament.get_sorted_players()
         used_players = set()
         previous_matches = self.played_match(tournament)
+
         for i in range(len(sorted_players_list)):
             player1 = sorted_players_list[i]
             if player1 in used_players:
                 continue
-            for j in range(i+1, len(sorted_players_list)):
+            for j in range(i + 1, len(sorted_players_list)):
                 player2 = sorted_players_list[j]
                 if player2 in used_players:
                     continue
@@ -167,6 +172,7 @@ class RoundController:
                     round.matches_list.append(Match(player1, player2))
                     used_players.update({player1, player2})
                     break
+
         self.check_and_add_remaining_players(tournament, round, used_players)
 
     def check_and_add_remaining_players(self, tournament, round, used_players):
@@ -177,19 +183,14 @@ class RoundController:
                 remaining_players.append(player)
         if len(remaining_players) >= 2:
             for i in range(0, len(remaining_players), 2):
-                round.matches_list.append(Match(remaining_players[i],
-                                                remaining_players[i+1]))
+                round.matches_list.append(Match(remaining_players[i], remaining_players[i + 1]))
 
     def played_match(self, tournament):
         """List all matches already played.
-        Returns a sorted tuple to take into account the possibilities."""
+        Returns a sorted tuple to take into account the possibilities.
+        """
         previous_matches = set()
         for round in tournament.rounds_list:
             for match in round.matches_list:
-                previous_matches.add(tuple(sorted((match.player1.chess_id,
-                                                   match.player2.chess_id))))
+                previous_matches.add(tuple(sorted((match.player1.chess_id, match.player2.chess_id))))
         return previous_matches
-
-    def get_actual_match_number(self, tournament, match):
-        """Return the index of the current match."""
-        return tournament.rounds_list[-1].matches_list.index(match) + 1

@@ -7,24 +7,21 @@ class Player:
         self.first_name = first_name
         self.birthdate = birthdate
         self.chess_id = chess_id
-        self.score = float(score)
+        self.score = score
 
     def add_score(self, points):
         """Add points to the player's score."""
         self.score += float(points)
 
     def to_dict(self):
-        """Transform a Player model to a player's dictionnary datas."""
+        """Transform a Player model to a minimal dictionnary datas."""
         return {
             "chess_id": self.chess_id,
         }
 
     @classmethod
     def from_dict(cls, datas):
-        """Rebuilds players from a dictionary.."""
-        return Player(datas["last_name"],
-                      datas["first_name"],
-                      datas["birthdate"],
-                      datas["chess_id"],
-                      datas.get("score", 0.0)
-                      )
+        """Rebuilds players from a dictionary."""
+        return Player(
+            datas["last_name"], datas["first_name"], datas["birthdate"], datas["chess_id"], datas.get("score", 0.0)
+        )

@@ -1,0 +1,5 @@
+[flake8]
+exclude = env,.venv,__pycache__
+format = html
+htmldir = flake8_rapport
+max-line-length = 119

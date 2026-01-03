@@ -1,11 +1,41 @@
-from datetime import datetime
 import re
+from datetime import datetime
 
 
 class GenericView:
     """Manages all the generic methods for the user input errors."""
 
     DEFAULT_WIDTH = 82
+
+    def __init__(self, use_rich=True):
+        """Checks if Rich is installed.
+        If True, initialize Rich and generic styles for the user view.
+        """
+        self.use_rich = use_rich
+        if use_rich:
+            try:
+                from rich.console import Console
+
+                self.console = Console()
+            except ImportError:
+                self.use_rich = False
+        self.styles = {
+            "warning": "salmon1",
+            "save_or_load_info": "italic grey37",
+            "loading_state": "bold grey37",
+            "principal_header": "bold bright_white",
+            "headers_and_separators": "bold white",
+            "winner_header": "bold",
+            "winner": "bold yellow",
+        }
+
+    def rich_print(self, message, style):
+        """Displays text in a generic Rich style if Rich is installed.
+        Use print as usual if not."""
+        if self.use_rich:
+            self.console.print(f"[{self.styles[style]}]{message}[/]")
+        else:
+            print(message)
 
     def get_confirmation_choice(self, prompt, yes="y", no="n"):
         """Manages yes/no questions and related inputs errors."""
@@ -15,12 +45,14 @@ class GenericView:
                 return True
             if choice == no:
                 return False
-            print(f'Veuillez entrer "{yes}" pour confirmer ou '
-                  f'"{no}" pour annuler\n')
+            print(f"Veuillez entrer '{yes}' pour confirmer ou '{no}' pour annuler\n")
 
     def display_options(self, options):
         """Enumerates multiple choices menu."""
-        for i, option, in enumerate(options, 1):
+        for (
+            i,
+            option,
+        ) in enumerate(options, 1):
             print(f"{i} - {option}")
 
     def get_validated_choice(self, max_options):
@@ -29,8 +61,7 @@ class GenericView:
             choice = input("Choix: ")
             if choice.isdigit() and 1 <= int(choice) <= max_options:
                 return choice
-            print("Choix invalide, "
-                  f"veuillez choisir entre 1 et {max_options}")
+            print(f"Choix invalide, veuillez choisir entre 1 et {max_options}")
 
     def get_return_or_validated_choice(self, max_options):
         while True:
@@ -39,13 +70,11 @@ class GenericView:
                 return choice
             if choice == "R":
                 return False
-            print("Choix invalide, "
-                  f'veuillez choisir entre 1 et {max_options} '
-                  'ou "R" pour revenir en arrière')
+            print(f"Choix invalide, veuillez choisir entre 1 et {max_options} ou 'R' pour revenir en arrière")
 
     def get_validated_input(self, prompt, required, validated):
         """checks the validation of data entered by the user in the field.
-        required True is a requided field.
+        Required True is a requided field.
         validated True valid a specific format needed."""
         while True:
             value = input(f"- {prompt}: ").strip()
@@ -61,7 +90,7 @@ class GenericView:
         while True:
             if not input(f"\nAppuyer sur Entrée pour {prompt}...").strip():
                 return
-            print("Veuillez appuyer uniquement sur Entrée pour continuer.")
+            print("Veuillez appuyer uniquement sur la touche Entrée pour continuer.")
 
     def validate_date_format(self, date_str):
         """Checks the validity of birth dates."""
@@ -69,7 +98,7 @@ class GenericView:
             datetime.strptime(date_str, "%d/%m/%Y")
             return True
         except ValueError:
-            print("Un format DD/MM/YYYY est requis")
+            print("Un format 'DD/MM/YYYY' est requis")
             return False
 
     def validate_id_format(self, id_str):
@@ -77,7 +106,7 @@ class GenericView:
         if bool(re.match(r"[A-Z]{2}[0-9]{5}$", id_str)):
             return True
         else:
-            print('Un format "AB12345" est requis')
+            print("Un format 'AB12345' est requis")
             return False
 
     def validate_round_format(self, round_str):
@@ -88,9 +117,10 @@ class GenericView:
             if int(round_str) <= 0:
                 raise ValueError
         except ValueError:
-            print("Appuyer uniquement sur Entrée pour laisser le nombre "
-                  "de tours par défaut (4) ou saisissez un nombre "
-                  "supérieur à 0")
+            print(
+                "Appuyer uniquement sur Entrée pour laisser le nombre de tour "
+                "par défaut (4) ou saisissez un nombre supérieur à 0"
+            )
             return False
         return True
 
@@ -99,35 +129,37 @@ class GenericView:
         separator = char * width
         title_line = f"-== {title} ==-"
         padding = (width - len(title_line)) // 2
-        print(f"\n{separator}\n{' ' * padding}{title_line}\n{separator}")
+        message = f"\n{separator}\n{' ' * padding}{title_line}\n{separator}"
+        self.rich_print(message, "principal_header")
 
     def display_level_two_header(self, message, width=DEFAULT_WIDTH, char="-"):
         """Displays a level 2 header."""
         separator = char * width
         padding = (width - len(message)) // 2
-        print(f"\n{separator}\n{' ' * padding}{message}\n{separator}")
+        message = f"\n{separator}\n{' ' * padding}{message}\n{separator}"
+        self.rich_print(message, "headers_and_separators")
 
-    def display_level_three_header(self, message,
-                                   width=DEFAULT_WIDTH, char="-"):
+    def display_level_three_header(self, message, width=DEFAULT_WIDTH, char="-"):
         """Displays a level 3 header with underline."""
         separator = char * width
         underline = char * len(message)
-        print(f"{separator}\n{message}\n{underline} ")
+        message = f"{separator}\n{message}\n{underline} "
+        self.rich_print(message, "headers_and_separators")
 
-    def display_winner_header(self, message, winner,
-                              width=DEFAULT_WIDTH, char="*"):
+    def display_winner_header(self, message, winner, width=DEFAULT_WIDTH, char="*"):
         """Displays header for winner message."""
         separator = f"{char * width}\n{char * width}"
         winner_line = f"*** {winner} ***"
         padding_one = (width - len(winner_line)) // 2
         padding_two = (width - len(message)) // 2
-        print(f"\n{separator}\n{' ' * padding_two}{message}\n\n"
-              f"{' ' * padding_one}{winner_line}\n\n{separator}")
+        self.rich_print(f"\n{separator}\n{' ' * padding_two}{message}\n", "winner_header")
+        self.rich_print(f"{' ' * padding_one}{winner_line}", "winner")
+        self.rich_print(f"\n\n{separator}\n", "winner_header")
 
     def display_separator_level_one(self, width=DEFAULT_WIDTH):
         """Separator for the wiew."""
-        print("=" * width)
+        self.rich_print("=" * width, "headers_and_separators")
 
     def display_separator_level_two(self, width=DEFAULT_WIDTH):
         """Separator for the wiew."""
-        print("-" * width)
+        self.rich_print("-" * width, "headers_and_separators")

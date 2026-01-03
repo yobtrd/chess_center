@@ -17,17 +17,12 @@ class Round:
             "name": self.name,
             "start_date": self.start_date,
             "end_date": self.end_date,
-            "matches": [m.to_dict() for m in self.matches_list]
-            }
+            "matches": [m.to_dict() for m in self.matches_list],
+        }
 
     @classmethod
     def from_dict(cls, round_data, players_dict):
         """Rebuilds round from a dictionary.."""
-        round = Round(round_data["name"],
-                      round_data["start_date"],
-                      round_data["end_date"])
-        round.matches_list = [
-            Match.from_dict(m, players_dict)
-            for m in round_data.get("matches", [])
-            ]
+        round = Round(round_data["name"], round_data["start_date"], round_data["end_date"])
+        round.matches_list = [Match.from_dict(m, players_dict) for m in round_data.get("matches", [])]
         return round
