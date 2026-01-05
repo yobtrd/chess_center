@@ -2,7 +2,7 @@ class Player:
     """Data and business logic of the player"""
 
     def __init__(self, last_name, first_name, birthdate, chess_id, score=0.0):
-        """Initiate all the data needed for the player."""
+        """Initializes all the data needed for the player."""
         self.last_name = last_name
         self.first_name = first_name
         self.birthdate = birthdate
@@ -14,7 +14,7 @@ class Player:
         self.score += float(points)
 
     def to_dict(self):
-        """Transform a Player model to a minimal dictionnary datas."""
+        """Transforms a Player model to a minimal dictionnary datas."""
         return {
             "chess_id": self.chess_id,
         }

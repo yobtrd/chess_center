@@ -28,7 +28,7 @@ class UserView:
         fields_config = {
             "last_name": ("Nom de famille du joueur", True, None),
             "first_name": ("Prénom du joueur", True, None),
-            "birthdate": ("Date (DD/MM/YYYY)", True, self.generic.validate_date_format),
+            "birthdate": ("Date de naissance (DD/MM/YYYY)", True, self.generic.validate_date_format),
             "chess_id": ("ID national (AB12345)", True, self.generic.validate_id_format),
         }
         player_datas = {}
@@ -153,7 +153,7 @@ class UserView:
             print(f"{i} - {player["last_name"].upper()} {player["first_name"]}")
 
     def display_tournament_summary(self, tournament):
-        """Summarize the tournament's data before start or resume."""
+        """Summarizes the tournament's data before start or resume."""
         message = f"Le {tournament.name} de {tournament.place} a commencé le {tournament.start_date}"
         self.generic.display_principal_header(message)
         print(f"Nombres de tours: {tournament.total_rounds}")
@@ -197,20 +197,26 @@ class UserView:
         self.generic.display_separator_level_one()
         self.generic.display_level_three_header(f"Résultat du {round.name}")
         for i, match in enumerate(matches_list, 1):
-            player1 = f"{match.match_result[0][0].first_name} {match.match_result[0][0].last_name.upper()}"
-            player2 = f"{match.match_result[1][0].first_name} {match.match_result[1][0].last_name.upper()}"
+            player1 = f"{match.match_result[0][0].first_name} {match.match_result[0][0].last_name}"
+            player2 = f"{match.match_result[1][0].first_name} {match.match_result[1][0].last_name}"
             points_p1 = match.match_result[0][1]
             points_p2 = match.match_result[1][1]
-            results = f"({player1} reçoit {points_p1} point(s), {player2} reçoit {points_p2} point(s))"
             if points_p1 > points_p2:
-                print(f"- Match {i}: {player1} remporte le match !\n  {results}\n")
-            elif points_p1 < points_p2:
-                print(f"- Match {i}: {player2} remporte le match !\n  {results}\n")
-            elif points_p1 == points_p2:
-                print(
-                    f"- Match {i}: Match nul entre {player1} et {player2} !\n  "
-                    "(chacun des joeurs reçoit 0.5 points)\n"
+                result = (
+                    f"- Match {i}: {player1} remporte le match !\n  "
+                    f"({player1} reçoit {points_p1} point(s), {player2} reçoit {points_p2} point(s))\n"
                 )
+            elif points_p1 < points_p2:
+                result = (
+                    f"- Match {i}: {player2} remporte le match !\n  "
+                    f"({player2} reçoit {points_p2} point(s), {player1} reçoit {points_p1} point(s))\n"
+                )
+            elif points_p1 == points_p2:
+                result = (
+                    f"- Match {i}: Match nul entre {player1} et {player2} !\n  "
+                    "(chacun des joueurs reçoit 0.5 points)\n"
+                )
+            print(result)
 
     def display_scores(self, sorted_players):
         """displays the updated scoreboard."""
@@ -273,9 +279,15 @@ class UserView:
             for i, match in enumerate(round["matches"], 1):
                 player1 = id_to_name[match["player1"]["chess_id"]]
                 player2 = id_to_name[match["player2"]["chess_id"]]
-                p1_points = match["match_result"][match["player1"]["chess_id"]]
-                p2_points = match["match_result"][match["player2"]["chess_id"]]
-                print(f"- Match {i}:\n{player1} ({p1_points}) VS. {player2} ({p2_points})")
+                points_p1 = match["match_result"][match["player1"]["chess_id"]]
+                points_p2 = match["match_result"][match["player2"]["chess_id"]]
+                if points_p1 > points_p2:
+                    result = f"> Remporté par {player1}.\n"
+                elif points_p1 < points_p2:
+                    result = f"> Remporté par {player2}.\n"
+                elif points_p1 == points_p2:
+                    result = "> Match nul.\n"
+                print(f" - Match {i}: {player1} VS {player2}\n    {result}")
 
     # === Get confirmation and validation methods ===
     def get_start_new_tournament_choice(self):
@@ -312,7 +324,7 @@ class UserView:
 
     def get_generate_report_choice(self):
         "Confirmation regarding the generate report selection."
-        return self.generic.get_confirmation_choice("Générer des rapports")
+        return self.generic.get_confirmation_choice("\nGénérer des rapports")
 
     def get_first_round_start_validation(self):
         """Validates the start of the first round."""

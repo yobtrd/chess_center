@@ -39,7 +39,7 @@ class RoundController:
         save(tournament)
 
     def get_round_state(self, tournament):
-        """Retrieve the progress of a round during loading."""
+        """Retrieves the progress of a round during loading."""
         matches_status = self.get_matches_status(tournament)
         if tournament.rounds_list:
             round_ended = tournament.rounds_list[-1].end_date
@@ -55,8 +55,7 @@ class RoundController:
             return "round_completed"
 
     def get_matches_status(self, tournament):
-        """Indicate False if the matches are finished with results,
-        True if not.
+        """Indicate False if the matches are finished with results, True if not.
         Returns a list of booleans for each match.
         """
         matches_status = []
@@ -140,7 +139,7 @@ class RoundController:
         self.view.display_scores(tournament.get_sorted_players())
 
     def get_actual_match_number(self, tournament, match):
-        """Return the index of the current match."""
+        """Returns the index of the current match."""
         return tournament.rounds_list[-1].matches_list.index(match) + 1
 
     # === Pairs generation methods ===

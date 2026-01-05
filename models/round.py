@@ -5,14 +5,14 @@ class Round:
     """Data and business logic of the round."""
 
     def __init__(self, name, start_date=None, end_date=None):
-        """Initiate all the data needed for the round."""
+        """Initializes all the data needed for the round."""
         self.name = name
         self.start_date = start_date
         self.end_date = end_date
         self.matches_list = []
 
     def to_dict(self):
-        """Transform a Round model to a round's dictionnary datas."""
+        """Transforms a Round model to a round's dictionnary datas."""
         return {
             "name": self.name,
             "start_date": self.start_date,

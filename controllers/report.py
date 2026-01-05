@@ -7,8 +7,8 @@ class ReportController:
 
     def __init__(self, view, player_controller, tournament_controller):
         """Initialization of the report controller.
-        Initialize the view and the needed controllers.
-        Initialize the path for the privates files.
+        Initializes the view and the needed controllers.
+        Initializes the path for the privates reports files.
         """
         self.view = view
         self.player_controller = player_controller
@@ -18,7 +18,7 @@ class ReportController:
 
     def reports_main_menu(self):
         """Manages reports menu selection.
-        Return True to return to the main menu.
+        Returns True to return to the main menu.
         """
         while True:
             choice = self.view.get_reports__main_menu_choice()
@@ -34,7 +34,7 @@ class ReportController:
 
     def console_reports_menu(self):
         """Manages the console's report menu.
-        Return False to return to the reports main menu.
+        Returns False to return to the reports main menu.
         """
         while True:
             choice = self.view.get_console_reports_menu_choice()
@@ -58,7 +58,7 @@ class ReportController:
     def generate_tournaments_list_console_reports(self):
         """Manages the reports of finished tournaments.
         Check if there are any saved tournaments and display them if so.
-        Return False by entering "R" to return to the console report menu.
+        Returns False by entering "R" to return to the console report menu.
         """
         ended_tournaments = self.checks_for_ended_tournaments()
         if self.are_no_tournament_saved(ended_tournaments):
@@ -97,10 +97,8 @@ class ReportController:
         self.view.display_tournament_players_list_report(players_list)
 
     def tournament_rounds_and_matches_console(self, tournament):
-        """Manages the display of rounds and matches for
-        a selected tournament.
-        """
-        id_to_name = self.get_chess_id_to_name()
+        """Manages the display of rounds and matches for a selected tournament."""
+        id_to_name = self.transform_chess_id_list_to_name_list()
         self.view.dispay_round_and_matches_report(tournament, id_to_name)
 
     def run_html_reports_generation(self):
@@ -176,7 +174,7 @@ class ReportController:
             list_to_use = self.player_controller.saved_players_list
             players_list = self.get_alphabetical_player_list(list_to_use)
             return "\n".join(
-                f"<li>{p['last_name'].upper()} {p['first_name']}" f"({p['birthdate']}) | INE: {p['chess_id']}</li>"
+                f"<li>{p['last_name'].upper()} {p['first_name']} ({p['birthdate']}) | INE: {p['chess_id']}</li>"
                 for p in players_list
             )
 
@@ -224,25 +222,28 @@ class ReportController:
         list_to_use = self.get_tournament_players_details(tournament)
         players_list = self.get_alphabetical_player_list(list_to_use)
         return "\n".join(
-            f"""<li>{p['last_name'].upper()} {p['first_name']}
-                ({p['birthdate']}) | INE: {p['chess_id']}</li>"""
+            f"<li>{p['last_name'].upper()} {p['first_name']} ({p['birthdate']}) | INE: {p['chess_id']}</li>"
             for p in players_list
         )
 
     def generate_rounds_and_matches_html(self, tournament):
-        """Create the tournament rounds and matches for
-        the tournament html page.
-        """
-        id_to_name = self.get_chess_id_to_name()
+        """Create the tournament rounds and matches for the tournament html page."""
+        id_to_name = self.transform_chess_id_list_to_name_list()
         html = []
         for round in tournament["tournament_rounds_list"]:
             html.append(f"<h3>{round['name']}</h3><ul>")
             for i, match in enumerate(round["matches"], 1):
                 player1 = id_to_name[match["player1"]["chess_id"]]
                 player2 = id_to_name[match["player2"]["chess_id"]]
-                p1_points = match["match_result"][match["player1"]["chess_id"]]
-                p2_points = match["match_result"][match["player2"]["chess_id"]]
-                html.append(f"<li>" f"Match {i}: {player1} ({p1_points}) VS. {player2} ({p2_points})</li>")
+                points_p1 = match["match_result"][match["player1"]["chess_id"]]
+                points_p2 = match["match_result"][match["player2"]["chess_id"]]
+                if points_p1 > points_p2:
+                    result = f"remporté par {player1}"
+                elif points_p1 < points_p2:
+                    result = f"remporté par {player2}"
+                elif points_p1 == points_p2:
+                    result = "match nul"
+                html.append(f"<li>Match {i}: {player1} VS {player2} ({result}).</li>")
             html.append("</ul>")
         return "\n".join(html)
 
@@ -261,11 +262,10 @@ class ReportController:
         player_ids = {p["chess_id"] for p in tournament["tournament_players_list"]}
         return [p for p in self.player_controller.saved_players_list if p["chess_id"] in player_ids]
 
-    def get_chess_id_to_name(self):
-        """Converts a player's chess ID into their first and last name."""
+    def transform_chess_id_list_to_name_list(self):
+        """Converts player's chess ID list into player's first and last name list."""
         return {
-            p["chess_id"]: f"{p["last_name"].upper()} {p["first_name"]}"
-            for p in self.player_controller.saved_players_list
+            p["chess_id"]: f"{p["first_name"]} {p["last_name"]}" for p in self.player_controller.saved_players_list
         }
 
     def checks_for_ended_tournaments(self):

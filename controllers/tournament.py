@@ -12,7 +12,7 @@ class TournamentController:
 
     def __init__(self, view, player_controller, round_controller):
         """Initialization of the main menu.
-        Initialize the view and the needed controllers.
+        Initializes the view and the needed controllers.
         """
         self.view = view
         self.player_controller = player_controller
@@ -39,8 +39,8 @@ class TournamentController:
 
     def tournament_menu(self, tournament):
         """Manages tournament menu selection.
-        Return True to start the tournament.
-        Return False to return to main menu.
+        Returns True to start the tournament.
+        Returns False to return to main menu.
         """
         while True:
             choice = self.view.get_tournament_menu_choice(tournament)
@@ -62,7 +62,7 @@ class TournamentController:
 
     def tournament_player_add_menu(self, tournament):
         """Manages the player addition menu.
-        Return True to return to the tournament menu.
+        Returns True to return to the tournament menu.
         """
         while True:
             counter = len(tournament.players_list)
@@ -83,12 +83,12 @@ class TournamentController:
 
     def add_tournament_players_by_id(self, tournament):
         """Manages the addition of players by chess ID method."""
-        should_continue = True
-        while should_continue:
+        while True:
             checked_player = self.player_controller.add_player_by_id()
             if checked_player is None:
                 self.view.display_no_saved_players_error()
                 self.view.get_back_to_registration_menu_validation()
+                break
             elif checked_player is False:
                 self.view.display_no_id_match_error()
             elif checked_player:
@@ -98,7 +98,8 @@ class TournamentController:
                     self.save_tournament(tournament)
                 else:
                     self.view.display_already_added_player_error()
-            should_continue = self.view.get_add_another_player_choice()
+            if not self.view.get_add_another_player_choice():
+                break
 
     def add_tournament_players_by_list(self, tournament):
         """Manages the addition of players by list method."""
@@ -190,8 +191,8 @@ class TournamentController:
 
     def find_existing_tournament(self, tournament_to_check):
         """Search saved tournaments if the tournament already exists.
-        Return the index of the existing tournament.
-        Return None if no tournament is found.
+        Returns the index of the existing tournament.
+        Returns None if no tournament is found.
         """
         for (
             index,
@@ -203,8 +204,8 @@ class TournamentController:
 
     def load_last_tournament(self):
         """Rebuilds the datas of the last tournament state with a JSON file.
-        Return the reserialized tournament.
-        Return None in case of exception.
+        Returns the reserialized tournament.
+        Returns None in case of exception.
         """
         if not self.saved_tournaments_list:
             return None

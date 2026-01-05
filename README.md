@@ -13,14 +13,14 @@ Application de gestion de tournoi d'échec, autonome et hors-ligne, fonctionnant
 
 ## Prérequis
 
-- Python `3.8+`;
+- Python `3.8+` ;
 - (Optionnel) Git pour clôner le dépôt ;
 - Compatible avec n'importe quel OS (Windows/Linux/macOS).
 
 ## Installation
 
 - Cloner ou sauvegarder le dépôt dans le répertoire de travail de votre choix.
-- (Optionnel) installer les dépendances pour améliorer le visuel de la console.
+- (Optionnel) installer les dépendances pour améliorer le visuel de la console.  
 Pour ce faire, dans le répertoire de travail:
 
 ```bash
@@ -42,10 +42,10 @@ Lors de la génération de rapports des tournois au format HTML, le fichier sera
 - Respect des normes PEP-8 ;
 - Rapport de conformité PEP-8 disponible via Flake8.
 
-### Générer un nouveau rapport Flake-8
+### Nouveau rapport Flake8
 
-- Nécessite Flake8 `5.0.0+`
-Pur ce faire, dans le répertoire de travail:
+- Nécessite Flake8 `5.0.0+` 
+- Pour générer un nouveau rapport, dans le répertoire de travail:
 
 ```bash
 flake8

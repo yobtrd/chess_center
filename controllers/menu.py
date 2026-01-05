@@ -3,7 +3,7 @@ class MenuController:
 
     def __init__(self, view, tournament_controller, player_controller, report_controller):
         """Initialization of the main menu.
-        Initialize the view and the needed controllers.
+        Initializes the view and the needed controllers.
         """
         self.view = view
         self.tournament_controller = tournament_controller
@@ -61,7 +61,7 @@ class MenuController:
             self.tournament_controller.run_tournament_flow(tournament)
 
     def are_saved_tournament(self):
-        """Return True if a tournament is saved, False otherwise."""
+        """Returns True if a tournament is saved, False otherwise."""
         if self.tournament_controller.saved_tournaments_list:
             return True
         else:

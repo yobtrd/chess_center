@@ -5,7 +5,7 @@ class Tournament:
     """Data and business logic of the tournament."""
 
     def __init__(self, name, place, start_date, end_date=None, total_rounds=4, description=None, actual_round_index=0):
-        """Initiate all the data needed for the tournament.
+        """Initializes all the data needed for the tournament.
         players_list lists all registered players in the tournament.
         rounds_list list all the Round instance of the tournament.
         """
@@ -32,7 +32,7 @@ class Tournament:
 
     def add_tournament_player(self, player):
         """Add player to tournament if not already registered.
-        Return False if a player is already added.
+        Returns False if a player is already added.
         """
         if self.check_already_added_player(player):
             return False
@@ -41,7 +41,7 @@ class Tournament:
 
     def check_already_added_player(self, player):
         """Checks if a player is already registered for the tournament.
-        Return True if already added.
+        Returns True if already added.
         """
         for p in self.players_list:
             if p.chess_id == player.chess_id:
@@ -49,14 +49,14 @@ class Tournament:
 
     def check_players_numbers(self):
         """Checks if the registered player is enough to start a tournament.
-        Return True if it does.
+        Returns True if it does.
         """
         if len(self.players_list) >= 2 and len(self.players_list) % 2 == 0:
             return False
         return True
 
     def get_sorted_players(self):
-        """Return players sorted by score,
+        """Returns players sorted by score,
         with random order for tied scores.
         """
         shuffled_players = self.players_list.copy()

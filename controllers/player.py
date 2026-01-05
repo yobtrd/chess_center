@@ -19,7 +19,7 @@ class PlayerController:
 
     def save_new_player(self):
         """Save a new player to the program.
-        Return a Player when used for adding one to a tournament.
+        Returns a Player when used for adding one to a tournament.
         """
         while True:
             intitial_player_datas = self.view.get_player_datas()
@@ -43,8 +43,8 @@ class PlayerController:
 
     def add_player_by_id(self):
         """Allows to add saved players to a tournament via their chess ID.
-        Return None if there are no saved players.
-        Return False if the ID in incorrect.
+        Returns None if there are no saved players.
+        Returns False if the ID in incorrect.
         """
         self.load_saved_players_list()
         if self.check_no_saved_players():
@@ -57,7 +57,7 @@ class PlayerController:
 
     def add_players_by_list(self):
         """Allows to add saved players to a tournament via a list.
-        Return None if there are no saved players.
+        Returns None if there are no saved players.
         """
         self.load_saved_players_list()
         if self.check_no_saved_players():
@@ -67,7 +67,7 @@ class PlayerController:
         return Player.from_dict(player_datas)
 
     def check_no_saved_players(self):
-        """Return True if there are no saved players."""
+        """Returns True if there are no saved players."""
         return len(self.saved_players_list) == 0
 
     def transform_players_datas(self, initial_player_datas):

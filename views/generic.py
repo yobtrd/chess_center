@@ -9,7 +9,7 @@ class GenericView:
 
     def __init__(self, use_rich=True):
         """Checks if Rich is installed.
-        If True, initialize Rich and generic styles for the user view.
+        If True, initializes Rich and generic styles for the user view.
         """
         self.use_rich = use_rich
         if use_rich:
@@ -45,7 +45,7 @@ class GenericView:
                 return True
             if choice == no:
                 return False
-            print(f"Veuillez entrer '{yes}' pour confirmer ou '{no}' pour annuler\n")
+            self.rich_print(f'Veuillez entrer "{yes}" pour confirmer ou "{no}" pour annuler\n', "warning")
 
     def display_options(self, options):
         """Enumerates multiple choices menu."""
@@ -61,16 +61,22 @@ class GenericView:
             choice = input("Choix: ")
             if choice.isdigit() and 1 <= int(choice) <= max_options:
                 return choice
-            print(f"Choix invalide, veuillez choisir entre 1 et {max_options}")
+            self.rich_print(f"Choix invalide, veuillez choisir entre 1 et {max_options}", "warning")
 
     def get_return_or_validated_choice(self, max_options):
+        """Manages multiple-choice selections and related errors.
+        Allows an option to go back by typing “R”
+        """
         while True:
             choice = input("Choix: ").upper()
             if choice.isdigit() and 1 <= int(choice) <= max_options:
                 return choice
             if choice == "R":
                 return False
-            print(f"Choix invalide, veuillez choisir entre 1 et {max_options} ou 'R' pour revenir en arrière")
+            self.rich_print(
+                f"Choix invalide, veuillez choisir entre 1 et {max_options} " 'ou "R" pour revenir en arrière',
+                "warning",
+            )
 
     def get_validated_input(self, prompt, required, validated):
         """checks the validation of data entered by the user in the field.
@@ -79,7 +85,7 @@ class GenericView:
         while True:
             value = input(f"- {prompt}: ").strip()
             if required and not value:
-                print("Ce champ est obligatoire")
+                self.rich_print("Ce champ est obligatoire", "warning")
                 continue
             if validated and not validated(value):
                 continue
@@ -90,7 +96,7 @@ class GenericView:
         while True:
             if not input(f"\nAppuyer sur Entrée pour {prompt}...").strip():
                 return
-            print("Veuillez appuyer uniquement sur la touche Entrée pour continuer.")
+            self.rich_print("Veuillez appuyer uniquement sur la touche Entrée pour continuer.", "warning")
 
     def validate_date_format(self, date_str):
         """Checks the validity of birth dates."""
@@ -98,7 +104,7 @@ class GenericView:
             datetime.strptime(date_str, "%d/%m/%Y")
             return True
         except ValueError:
-            print("Un format 'DD/MM/YYYY' est requis")
+            self.rich_print('Un format "DD/MM/YYYY" est requis', "warning")
             return False
 
     def validate_id_format(self, id_str):
@@ -106,7 +112,7 @@ class GenericView:
         if bool(re.match(r"[A-Z]{2}[0-9]{5}$", id_str)):
             return True
         else:
-            print("Un format 'AB12345' est requis")
+            self.rich_print('Un format "AB12345" est requis', "warning")
             return False
 
     def validate_round_format(self, round_str):
@@ -117,9 +123,10 @@ class GenericView:
             if int(round_str) <= 0:
                 raise ValueError
         except ValueError:
-            print(
+            self.rich_print(
                 "Appuyer uniquement sur Entrée pour laisser le nombre de tour "
-                "par défaut (4) ou saisissez un nombre supérieur à 0"
+                "par défaut (4) ou saisissez un nombre supérieur à 0",
+                "warning",
             )
             return False
         return True
