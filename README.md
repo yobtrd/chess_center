@@ -14,7 +14,7 @@ Application de gestion de tournoi d'échec, autonome et hors-ligne, fonctionnant
 ## Prérequis
 
 - Python `3.8+` ;
-- (Optionnel) Git pour clôner le dépôt ;
+- (Optionnel) Git pour cloner le dépôt ;
 - Compatible avec n'importe quel OS (Windows/Linux/macOS).
 
 ## Installation
@@ -36,7 +36,7 @@ python main.py # Ou py main.py
 ```
 Lors de la génération de rapports des tournois au format HTML, le fichier sera installé dans le répertoire courant sous ./RAPPORTS.html
 
-## Architecture maintenabilité du code
+## Architecture et maintenabilité du code
 
 - Architecture MVC pour une séparation claire des responsabilités ;
 - Respect des normes PEP-8 ;

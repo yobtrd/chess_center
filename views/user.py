@@ -397,8 +397,8 @@ class UserView:
         self.generic.rich_print(message, "warning")
 
     def display_players_numbers_error(self):
-        message = "\nAttention, un nombre de joueur pair et au moins égal à deux est nécessaire\n"
-        "avant de pouvoir démarrer un tournoi."
+        message = ("\nAttention, un nombre de joueur pair et au moins égal à deux est nécessaire\n"
+                   "avant de pouvoir démarrer un tournoi.")
         self.generic.rich_print(message, "warning")
 
     def display_no_id_match_error(self):
